@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -33,7 +32,6 @@ interface IPair {
 }
 
 export default function Results() {
-    const router = useRouter()
     const [matches, setMatches] = useState<Match[]>([])
     const [nextRoundMatches, setNextRoundMatches] = useState<Match[]>([])
     const [tournamentWinner, setTournamentWinner] = useState<string | IPair | null>(null)
@@ -80,7 +78,7 @@ export default function Results() {
     const generateNextRoundMatches = (winners: (string | IPair)[]) => {
         if (winners.length === 1) {
             const winner = winners[0];
-            setTournamentWinner(winner as any); // IPair o string
+            setTournamentWinner(winner as string); // IPair o string
             localStorage.setItem('tournamentWinner', JSON.stringify(winner));
             return;
         }

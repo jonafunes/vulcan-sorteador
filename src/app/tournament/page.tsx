@@ -12,7 +12,6 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { div } from 'motion/react-client'
 
 type Match = {
     player1?: string
@@ -36,7 +35,6 @@ export default function Tournament() {
     const [type, setType] = useState<'individual' | 'pairs'>('individual')
     const [participants, setParticipants] = useState<string[]>([])
     const [pairs, setPairs] = useState<string[]>([])
-    const [matches, setMatches] = useState<Match[]>([])
     const [tournamentPhase, setTournamentPhase] = useState<string>('')
     const [visibleMatches, setVisibleMatches] = useState<Match[]>([])
 
@@ -125,8 +123,6 @@ export default function Tournament() {
                 }
             }
         }
-        console.log({ newMatches })
-        setMatches(newMatches)
         setVisibleMatches([])
 
         newMatches.forEach((match, index) => {
