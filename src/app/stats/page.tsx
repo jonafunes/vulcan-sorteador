@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 import { Trophy, Download, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
+import { ConfettiEffect } from '@/components/confetti-effect'
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -26,12 +27,21 @@ type PlayerStats = {
 export default function Stats() {
     const router = useRouter()
     const [stats, setStats] = useState<{ [key: string]: PlayerStats }>({})
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [showConfetti, setShowConfetti] = useState<boolean>(false)
 
     useEffect(() => {
         const storedStats = localStorage.getItem('stats')
         if (storedStats) {
-            setStats(JSON.parse(storedStats))
+            const parsedStats = JSON.parse(storedStats)
+            setStats(parsedStats)
+            // Mostrar confetti si hay estadísticas
+            if (Object.keys(parsedStats).length > 0) {
+                setShowConfetti(true)
+                setTimeout(() => setShowConfetti(false), 5000)
+            }
         }
+        setIsLoading(false)
     }, [])
 
     const handleNewTournament = () => {
@@ -92,6 +102,18 @@ export default function Stats() {
         // 3. Si empatan en diferencia de goles, ordenar por goles a favor (descendente)
         return statsB.goalsFor - statsA.goalsFor
     })
+
+    // Mostrar loader mientras carga
+    if (isLoading) {
+        return (
+            <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <Trophy className="h-16 w-16 text-yellow-500 mx-auto mb-4 animate-bounce" />
+                    <p className="text-lg text-muted-foreground">Cargando estadísticas...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -202,6 +224,9 @@ export default function Stats() {
                     Exportar Datos
                 </Button>
             </div>
+            
+            {/* Confetti para celebrar las estadísticas */}
+            {showConfetti && <ConfettiEffect />}
         </div>
     )
 }

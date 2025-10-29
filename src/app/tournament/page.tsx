@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Trophy, Shuffle, Play, Loader2, Swords } from 'lucide-react'
+import { RevealButton } from '@/components/reveal-button'
+import { ConfettiEffect } from '@/components/confetti-effect'
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -43,6 +45,7 @@ export default function Tournament() {
     const [allMatches, setAllMatches] = useState<Match[]>([])
     const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(0)
     const [isManualMode, setIsManualMode] = useState<boolean>(false)
+    const [showConfetti, setShowConfetti] = useState<boolean>(false)
 
     useEffect(() => {
         const storedType = localStorage.getItem('tournamentType') as 'individual' | 'pairs'
@@ -159,6 +162,12 @@ export default function Tournament() {
         if (currentMatchIndex < allMatches.length) {
             setVisibleMatches((prev) => [...prev, allMatches[currentMatchIndex]])
             setCurrentMatchIndex(currentMatchIndex + 1)
+            
+            // Mostrar confetti cuando se revela el último partido
+            if (currentMatchIndex === allMatches.length - 1) {
+                setShowConfetti(true)
+                setTimeout(() => setShowConfetti(false), 4000)
+            }
         }
     }
 
@@ -228,14 +237,12 @@ export default function Tournament() {
                                 Modo Presentación: {visibleMatches.length} de {allMatches.length} partidos revelados
                             </p>
                             {currentMatchIndex < allMatches.length && (
-                                <Button 
+                                <RevealButton 
                                     onClick={revealNextMatch}
-                                    size="lg"
-                                    className="w-full"
-                                >
-                                    <Play className="mr-2 h-5 w-5" />
-                                    Revelar Siguiente Partido
-                                </Button>
+                                    icon={Play}
+                                    text="Revelar Siguiente Partido"
+                                    disabled={false}
+                                />
                             )}
                         </div>
                     )}
@@ -316,12 +323,9 @@ export default function Tournament() {
                     </Button>
                 </div>
             )}
+            
+            {/* Confetti cuando se completan todos los partidos */}
+            {showConfetti && <ConfettiEffect />}
         </div>
     )
 }
-
-// Agregar estilos de animación al globals.css si no existen
-// @keyframes slide-in-from-bottom {
-//   from { transform: translateY(10px); opacity: 0; }
-//   to { transform: translateY(0); opacity: 1; }
-// }

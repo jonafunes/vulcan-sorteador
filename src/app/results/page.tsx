@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import Link from 'next/link'
 import { Trophy, Save, BarChart3, Minus, Plus } from 'lucide-react'
+import { ConfettiEffect } from '@/components/confetti-effect'
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -38,6 +39,8 @@ export default function Results() {
     const [nextRoundMatches, setNextRoundMatches] = useState<Match[]>([])
     const [tournamentWinner, setTournamentWinner] = useState<string | IPair | null>(null)
     const [tournamentType, setTournamentType] = useState<string>('')
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [showConfetti, setShowConfetti] = useState<boolean>(false)
 
     useEffect(() => {
         const storedMatches = localStorage.getItem('matches')
@@ -45,8 +48,15 @@ export default function Results() {
         const storedType = localStorage.getItem('tournamentType')
 
         if (storedMatches) setMatches(JSON.parse(storedMatches))
-        if (storedWinner) setTournamentWinner(JSON.parse(storedWinner))
+        if (storedWinner) {
+            setTournamentWinner(JSON.parse(storedWinner))
+            // Mostrar confetti cuando hay un campeón
+            setShowConfetti(true)
+        }
         if (storedType) setTournamentType(storedType)
+        
+        // Marcar como cargado después de obtener los datos
+        setIsLoading(false)
     }, [])
 
     const updateScore = (index: number, player: 1 | 2, score: number) => {
@@ -187,6 +197,18 @@ export default function Results() {
     }
 
 
+    // Mostrar loader mientras carga
+    if (isLoading) {
+        return (
+            <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <Trophy className="h-16 w-16 text-yellow-500 mx-auto mb-4 animate-bounce" />
+                    <p className="text-lg text-muted-foreground">Cargando resultados...</p>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex items-center gap-3 mb-4">
@@ -205,6 +227,7 @@ export default function Results() {
                 </BreadcrumbList>
             </Breadcrumb>
             {tournamentWinner ? (
+                <>
                 <Card className="border-yellow-500 border-2 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20">
                     <CardContent className="pt-12 pb-12 text-center">
                         <Trophy className="h-20 w-20 text-yellow-500 mx-auto mb-6 animate-bounce" />
@@ -235,6 +258,9 @@ export default function Results() {
                         </Button>
                     </CardContent>
                 </Card>
+                {/* Confetti para el campeón */}
+                {showConfetti && <ConfettiEffect />}
+                </>
             ) : (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

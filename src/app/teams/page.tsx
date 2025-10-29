@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Shield, Plus, Trash2, Shuffle, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { SlotMachineClub } from '@/components/slot-machine-club'
+import { RevealButton } from '@/components/reveal-button'
+import { ConfettiEffect } from '@/components/confetti-effect'
 import {
     Drawer,
     DrawerClose,
@@ -52,6 +55,8 @@ export default function Teams() {
     const [currentAssignmentIndex, setCurrentAssignmentIndex] = useState<number>(0)
     const [isAssigning, setIsAssigning] = useState<boolean>(false)
     const [shuffledTeamsForAssignment, setShuffledTeamsForAssignment] = useState<string[]>([])
+    const [showConfetti, setShowConfetti] = useState<boolean>(false)
+    const [revealingClub, setRevealingClub] = useState<boolean>(false)
 
     useEffect(() => {
         const type = localStorage.getItem('tournamentType')
@@ -121,34 +126,52 @@ export default function Teams() {
     }
 
     const revealNextAssignment = () => {
-        if (tournamentType === 'pairs') {
-            if (currentAssignmentIndex < pairs.length) {
-                const pair = pairs[currentAssignmentIndex];
-                const team = shuffledTeamsForAssignment[currentAssignmentIndex] || null;
-                pair.club = team || '';
-                const assignment = [pair.player1, pair.player2, team];
-                setAssignedTeams((prev) => [...prev, assignment]);
-                setCurrentAssignmentIndex(currentAssignmentIndex + 1);
-                
-                // Guardar en localStorage después de cada asignación
-                localStorage.setItem('pairs', JSON.stringify(pairs));
+        setRevealingClub(true)
+        
+        // Esperar a que termine la animación del slot machine
+        setTimeout(() => {
+            if (tournamentType === 'pairs') {
+                if (currentAssignmentIndex < pairs.length) {
+                    const pair = pairs[currentAssignmentIndex];
+                    const team = shuffledTeamsForAssignment[currentAssignmentIndex] || null;
+                    pair.club = team || '';
+                    const assignment = [pair.player1, pair.player2, team];
+                    setAssignedTeams((prev) => [...prev, assignment]);
+                    setCurrentAssignmentIndex(currentAssignmentIndex + 1);
+                    
+                    // Guardar en localStorage después de cada asignación
+                    localStorage.setItem('pairs', JSON.stringify(pairs));
+                    
+                    // Mostrar confetti en la última asignación
+                    if (currentAssignmentIndex === pairs.length - 1) {
+                        setShowConfetti(true)
+                        setTimeout(() => setShowConfetti(false), 4000)
+                    }
+                }
+            } else {
+                if (currentAssignmentIndex < (players?.length || 0)) {
+                    const player = players![currentAssignmentIndex];
+                    const club = shuffledTeamsForAssignment[currentAssignmentIndex] || null;
+                    const newPlayer: IPlayers = {
+                        player: player as unknown as string,
+                        club: club || ''
+                    };
+                    setAssignedPlayers((prev) => [...prev, newPlayer]);
+                    setCurrentAssignmentIndex(currentAssignmentIndex + 1);
+                    
+                    // Guardar en localStorage después de cada asignación
+                    const allAssigned = [...assignedPlayers, newPlayer];
+                    localStorage.setItem('assignedPlayers', JSON.stringify(allAssigned));
+                    
+                    // Mostrar confetti en la última asignación
+                    if (currentAssignmentIndex === (players?.length || 0) - 1) {
+                        setShowConfetti(true)
+                        setTimeout(() => setShowConfetti(false), 4000)
+                    }
+                }
             }
-        } else {
-            if (currentAssignmentIndex < (players?.length || 0)) {
-                const player = players![currentAssignmentIndex];
-                const club = shuffledTeamsForAssignment[currentAssignmentIndex] || null;
-                const newPlayer: IPlayers = {
-                    player: player as unknown as string,
-                    club: club || ''
-                };
-                setAssignedPlayers((prev) => [...prev, newPlayer]);
-                setCurrentAssignmentIndex(currentAssignmentIndex + 1);
-                
-                // Guardar en localStorage después de cada asignación
-                const allAssigned = [...assignedPlayers, newPlayer];
-                localStorage.setItem('assignedPlayers', JSON.stringify(allAssigned));
-            }
-        }
+            setRevealingClub(false)
+        }, 100)
     }
 
     const areAllTeamsAssigned = assignedTeams.length === pairs.length && 
@@ -441,16 +464,24 @@ export default function Teams() {
                             <p className="text-sm font-medium mb-2">
                                 Modo Presentación: {tournamentType === 'pairs' ? assignedTeams.length : assignedPlayers.length} de {tournamentType === 'pairs' ? pairs.length : players?.length || 0} asignaciones reveladas
                             </p>
-                            {((tournamentType === 'pairs' && currentAssignmentIndex < pairs.length) || 
-                              (tournamentType !== 'pairs' && currentAssignmentIndex < (players?.length || 0))) && (
-                                <Button 
-                                    onClick={revealNextAssignment}
-                                    size="lg"
-                                    className="w-full"
-                                >
-                                    <Shield className="mr-2 h-5 w-5" />
-                                    Revelar Siguiente Asignación
-                                </Button>
+                            {revealingClub ? (
+                                <div className="py-4">
+                                    <SlotMachineClub 
+                                        finalClub={shuffledTeamsForAssignment[currentAssignmentIndex]}
+                                        allClubs={teams}
+                                        onComplete={() => {}}
+                                    />
+                                </div>
+                            ) : (
+                                ((tournamentType === 'pairs' && currentAssignmentIndex < pairs.length) || 
+                                  (tournamentType !== 'pairs' && currentAssignmentIndex < (players?.length || 0))) && (
+                                    <RevealButton 
+                                        onClick={revealNextAssignment}
+                                        icon={Shield}
+                                        text="Revelar Siguiente Asignación"
+                                        disabled={false}
+                                    />
+                                )
                             )}
                         </div>
                     )}
@@ -465,6 +496,9 @@ export default function Teams() {
                     </Button>
                 )}
             </div>
+            
+            {/* Confetti cuando se completan todas las asignaciones */}
+            {showConfetti && <ConfettiEffect />}
         </div>
     )
 }

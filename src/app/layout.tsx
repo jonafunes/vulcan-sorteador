@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+// @ts-ignore - ViewTransition existe en React 19 RC pero los tipos aún no están actualizados
+import { ViewTransition } from "react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,7 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ViewTransition name="page">
+          {children}
+        </ViewTransition>
       </body>
     </html>
   );
