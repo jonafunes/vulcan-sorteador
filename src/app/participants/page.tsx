@@ -18,6 +18,9 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer"
+import { AnimatedPairCard } from '@/components/animated-pair-card'
+import { RevealButton } from '@/components/reveal-button'
+import { ConfettiEffect } from '@/components/confetti-effect'
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -40,6 +43,7 @@ export default function Participants() {
     const [allPairs, setAllPairs] = useState<string[][]>([])
     const [currentPairIndex, setCurrentPairIndex] = useState<number>(0)
     const [isManualMode, setIsManualMode] = useState<boolean>(false)
+    const [showConfetti, setShowConfetti] = useState<boolean>(false)
 
     useEffect(() => {
         const storedType = localStorage.getItem('tournamentType') as 'individual' | 'pairs'
@@ -141,8 +145,14 @@ export default function Participants() {
 
     const revealNextPair = () => {
         if (currentPairIndex < allPairs.length) {
-            setShownPairs((prev) => [...prev, allPairs[currentPairIndex]]);
-            setCurrentPairIndex(currentPairIndex + 1);
+            setShownPairs((prev) => [...prev, allPairs[currentPairIndex]])
+            setCurrentPairIndex(currentPairIndex + 1)
+            
+            // Mostrar confetti cuando se revela la última pareja
+            if (currentPairIndex === allPairs.length - 1) {
+                setShowConfetti(true)
+                setTimeout(() => setShowConfetti(false), 4000)
+            }
         }
     };
     
@@ -320,14 +330,12 @@ export default function Participants() {
                                         Modo Presentación: {shownPairs.length} de {allPairs.length} parejas reveladas
                                     </p>
                                     {currentPairIndex < allPairs.length && (
-                                        <Button 
+                                        <RevealButton 
                                             onClick={revealNextPair}
-                                            size="lg"
-                                            className="w-full"
-                                        >
-                                            <Users className="mr-2 h-5 w-5" />
-                                            Revelar Siguiente Pareja
-                                        </Button>
+                                            icon={Users}
+                                            text="Revelar Siguiente Pareja"
+                                            disabled={false}
+                                        />
                                     )}
                                 </div>
                             )}
@@ -345,20 +353,15 @@ export default function Participants() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <ul className="space-y-3">
+                                <div className="space-y-3">
                                     {shownPairs.map((pair, index) => (
-                                        <li key={index} className="p-4 rounded-lg border bg-card">
-                                            <div className="flex items-center justify-between">
-                                                <Badge className="text-base px-3 py-1">Pareja #{index + 1}</Badge>
-                                            </div>
-                                            <div className="mt-3 flex items-center gap-2 text-lg font-medium">
-                                                <span>{pair[0]}</span>
-                                                <span className="text-muted-foreground">+</span>
-                                                <span>{pair[1]}</span>
-                                            </div>
-                                        </li>
+                                        <AnimatedPairCard 
+                                            key={index}
+                                            pair={[pair[0], pair[1]]}
+                                            index={index}
+                                        />
                                     ))}
-                                </ul>
+                                </div>
                             </CardContent>
                         </Card>
                     )}
@@ -378,6 +381,9 @@ export default function Participants() {
                     </Button>
                 )}
             </div>
+            
+            {/* Confetti cuando se completan todas las parejas */}
+            {showConfetti && <ConfettiEffect />}
         </div>
     )
 }
