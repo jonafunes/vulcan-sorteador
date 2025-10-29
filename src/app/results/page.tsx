@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import Link from 'next/link'
+import { Trophy, Save, BarChart3, Minus, Plus } from 'lucide-react'
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -43,7 +45,7 @@ export default function Results() {
         const storedType = localStorage.getItem('tournamentType')
 
         if (storedMatches) setMatches(JSON.parse(storedMatches))
-        if (storedWinner) setTournamentWinner(storedWinner)
+        if (storedWinner) setTournamentWinner(JSON.parse(storedWinner))
         if (storedType) setTournamentType(storedType)
     }, [])
 
@@ -78,7 +80,7 @@ export default function Results() {
     const generateNextRoundMatches = (winners: (string | IPair)[]) => {
         if (winners.length === 1) {
             const winner = winners[0];
-            setTournamentWinner(winner as string); // IPair o string
+            setTournamentWinner(winner); // IPair o string
             localStorage.setItem('tournamentWinner', JSON.stringify(winner));
             return;
         }
@@ -114,14 +116,14 @@ export default function Results() {
         // Calculate winners
         const winners = calculateWinners(updatedMatches)
 
-        const validWinners = winners.filter((winner): winner is string => !!winner);
+        const validWinners = winners.filter((winner): winner is string | IPair => !!winner);
 
         // Generate next round or set tournament winner
         generateNextRoundMatches(validWinners)
 
         // Load existing stats
         const existingStats = JSON.parse(localStorage.getItem('stats') || '{}')
-        const stats: { [key: string]: { wins: number, losses: number, goalsFor: number, goalsAgainst: number } } = { ...existingStats }
+        const stats: { [key: string]: { wins: number, losses: number, goalsFor: number, goalsAgainst: number, club?: string } } = { ...existingStats }
 
         // Update stats based on the tournament type (individual or parejas)
         updatedMatches.forEach(match => {
@@ -129,8 +131,8 @@ export default function Results() {
                 if (tournamentType === "pairs" ) {
                     // Si es un torneo por parejas
                     
-                    const team1Stats = stats[match.team1!.player1+" y "+match.team1!.player2] || { wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 }
-                    const team2Stats = stats[match.team2!.player1+" y "+match.team2!.player2] || { wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 }
+                    const team1Stats = stats[match.team1!.player1+" y "+match.team1!.player2] || { wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, club: match.team1!.club }
+                    const team2Stats = stats[match.team2!.player1+" y "+match.team2!.player2] || { wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, club: match.team2!.club }
                     
                     if (match.score1 > match.score2) {
                         team1Stats.wins++
@@ -144,6 +146,8 @@ export default function Results() {
                     team1Stats.goalsAgainst += match.score2
                     team2Stats.goalsFor += match.score2
                     team2Stats.goalsAgainst += match.score1
+                    team1Stats.club = match.team1!.club
+                    team2Stats.club = match.team2!.club
 
                     stats[match.team1!.player1+" y "+match.team1!.player2] = team1Stats
                     stats[match.team2!.player1+" y "+match.team2!.player2] = team2Stats
@@ -185,8 +189,11 @@ export default function Results() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-4">Ingresar Resultados</h1>
-            <Breadcrumb className='mb-4'>
+            <div className="flex items-center gap-3 mb-4">
+                <BarChart3 className="h-8 w-8 text-primary" />
+                <h1 className="text-3xl font-bold">Ingresar Resultados</h1>
+            </div>
+            <Breadcrumb className='mb-6'>
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink href="/">Home</BreadcrumbLink>
@@ -198,73 +205,124 @@ export default function Results() {
                 </BreadcrumbList>
             </Breadcrumb>
             {tournamentWinner ? (
-                 <div className="text-center p-4 bg-green-200 rounded-lg">
-                 <h2 className="text-2xl font-bold">
-                     ¡{tournamentType === "pairs"
-                         ? `${(tournamentWinner as IPair).player1} y ${(tournamentWinner as IPair).player2} del club ${(tournamentWinner as IPair).club}`
-                         : `${tournamentWinner}`} ganó el torneo!
-                 </h2>
-                 <Button className="mt-4">
-                     <Link href={"/stats"}>Estadísticas</Link>
-                 </Button>
-             </div>
+                <Card className="border-yellow-500 border-2 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/20 dark:to-yellow-900/20">
+                    <CardContent className="pt-12 pb-12 text-center">
+                        <Trophy className="h-20 w-20 text-yellow-500 mx-auto mb-6 animate-bounce" />
+                        <h2 className="text-3xl font-bold mb-4">
+                            ¡Campeón del Torneo!
+                        </h2>
+                        <div className="text-2xl font-semibold mb-6">
+                            {tournamentType === "pairs" && typeof tournamentWinner === 'object' && tournamentWinner !== null
+                                ? (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <span>{(tournamentWinner as IPair).player1}</span>
+                                            <span className="text-muted-foreground">+</span>
+                                            <span>{(tournamentWinner as IPair).player2}</span>
+                                        </div>
+                                        <Badge variant="secondary" className="text-lg px-4 py-2">
+                                            {(tournamentWinner as IPair).club}
+                                        </Badge>
+                                    </div>
+                                )
+                                : <span>{String(tournamentWinner)}</span>}
+                        </div>
+                        <Button size="lg" asChild>
+                            <Link href={"/stats"}>
+                                <BarChart3 className="mr-2 h-5 w-5" />
+                                Ver Estadísticas
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
             ) : (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {matches.map((match, index) => (
-                            <Card key={index}>
+                            <Card key={index} className="hover:shadow-lg transition-shadow">
                                 <CardHeader>
-                                    <CardTitle>Partido {index + 1}</CardTitle>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">Partido {index + 1}</CardTitle>
+                                        <Badge variant="outline">{match.round}</Badge>
+                                    </div>
                                 </CardHeader>
-                                <CardContent>
-                                    {/* Mostrar puntajes y nombres dependiendo del tipo de torneo */}
+                                <CardContent className="space-y-4">
                                     {tournamentType === "pairs" && match.team1 && match.team2 ? (
                                         <>
-                                            <div className="flex justify-between items-center mb-2">
-                                            <p>{(match.team1 as IPair).player1} y {(match.team1 as IPair).player2}</p>
-                                                <Input
-                                                    type="number"
-                                                    value={match.team1.player1 === "BYE" || match.team1.player2 === "BYE" ? '' : match.score1 || ''}
-                                                    onChange={(e) => updateScore(index, 1, parseInt(e.target.value))}
-                                                    className="w-16"
-                                                    disabled={match.team1.player1 === "BYE" || match.team2.player1 === "BYE"}
-                                                />
+                                            <div className="p-3 rounded-lg border bg-accent/30">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-1 text-sm font-medium mb-1">
+                                                            <span>{(match.team1 as IPair).player1}</span>
+                                                            <span className="text-muted-foreground">+</span>
+                                                            <span>{(match.team1 as IPair).player2}</span>
+                                                        </div>
+                                                        <Badge variant="secondary" className="text-xs">
+                                                            {(match.team1 as IPair).club}
+                                                        </Badge>
+                                                    </div>
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        value={match.team1.player1 === "BYE" || match.team1.player2 === "BYE" ? '' : match.score1 || ''}
+                                                        onChange={(e) => updateScore(index, 1, parseInt(e.target.value) || 0)}
+                                                        className="w-16 text-center text-lg font-bold"
+                                                        disabled={match.team1.player1 === "BYE" || match.team2.player1 === "BYE"}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                {(match.team2 as IPair).player1} y {(match.team2 as IPair).player2}
-                                                <Input
-                                                    type="number"
-                                                    value={match.team1.player1 === "BYE" || match.team2.player1 === "BYE" ? '' : match.score2 || ''}
-                                                    onChange={(e) => updateScore(index, 2, parseInt(e.target.value))}
-                                                    className="w-16"
-                                                    disabled={match.team1.player1 === "BYE" || match.team2.player1 === "BYE"}
-                                                />
+                                            <p className="text-center text-muted-foreground font-semibold">VS</p>
+                                            <div className="p-3 rounded-lg border bg-accent/30">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-1 text-sm font-medium mb-1">
+                                                            <span>{(match.team2 as IPair).player1}</span>
+                                                            <span className="text-muted-foreground">+</span>
+                                                            <span>{(match.team2 as IPair).player2}</span>
+                                                        </div>
+                                                        <Badge variant="secondary" className="text-xs">
+                                                            {(match.team2 as IPair).club}
+                                                        </Badge>
+                                                    </div>
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        value={match.team1.player1 === "BYE" || match.team2.player1 === "BYE" ? '' : match.score2 || ''}
+                                                        onChange={(e) => updateScore(index, 2, parseInt(e.target.value) || 0)}
+                                                        className="w-16 text-center text-lg font-bold"
+                                                        disabled={match.team1.player1 === "BYE" || match.team2.player1 === "BYE"}
+                                                    />
+                                                </div>
                                             </div>
-                                            <p className="mt-2 text-center">
-                                                {`${match.team1.club} vs ${match.team2.club}`}
-                                            </p>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span>{match.player1}</span>
-                                                <Input
-                                                    type="number"
-                                                    value={match.player1 === "BYE" || match.player2 === "BYE" ? '' : match.score1 || ''}
-                                                    onChange={(e) => updateScore(index, 1, parseInt(e.target.value))}
-                                                    className="w-16"
-                                                    disabled={match.player1 === "BYE" || match.player2 === "BYE"}
-                                                />
+                                            <div className="p-3 rounded-lg border bg-accent/30">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-medium">{match.player1}</span>
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        value={match.player1 === "BYE" || match.player2 === "BYE" ? '' : match.score1 || ''}
+                                                        onChange={(e) => updateScore(index, 1, parseInt(e.target.value) || 0)}
+                                                        className="w-16 text-center text-lg font-bold"
+                                                        disabled={match.player1 === "BYE" || match.player2 === "BYE"}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                <span>{match.player2}</span>
-                                                <Input
-                                                    type="number"
-                                                    value={match.player1 === "BYE" || match.player2 === "BYE" ? '' : match.score2 || ''}
-                                                    onChange={(e) => updateScore(index, 2, parseInt(e.target.value))}
-                                                    className="w-16"
-                                                    disabled={match.player1 === "BYE" || match.player2 === "BYE"}
-                                                />
+                                            <p className="text-center text-muted-foreground font-semibold">VS</p>
+                                            <div className="p-3 rounded-lg border bg-accent/30">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-medium">{match.player2}</span>
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        value={match.player1 === "BYE" || match.player2 === "BYE" ? '' : match.score2 || ''}
+                                                        onChange={(e) => updateScore(index, 2, parseInt(e.target.value) || 0)}
+                                                        className="w-16 text-center text-lg font-bold"
+                                                        disabled={match.player1 === "BYE" || match.player2 === "BYE"}
+                                                    />
+                                                </div>
                                             </div>
                                         </>
                                     )}
@@ -272,11 +330,10 @@ export default function Results() {
                             </Card>
                         ))}
                     </div>
-
-                    <div className='flex flex-row gap-4'>
-                        <Button onClick={saveResults} className="mt-4">Guardar y Continuar</Button>
-                        <Button className="mt-4">
-                            <Link href={"/stats"}>Estadísticas</Link>
+                    <div className="flex justify-center mt-8">
+                        <Button onClick={saveResults} size="lg">
+                            <Save className="mr-2 h-5 w-5" />
+                            Guardar Resultados
                         </Button>
                     </div>
                 </>
