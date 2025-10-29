@@ -21,6 +21,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 👇 Instalar pnpm antes de cualquier otra cosa
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Detect package manager
         id: detect-package-manager
         run: |
@@ -43,13 +49,6 @@ jobs:
         with:
           node-version: "20"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
-
-      # 👇 Nuevo paso: instalar pnpm si se detectó pnpm-lock.yaml
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
