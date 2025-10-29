@@ -170,19 +170,19 @@ export default function Participants() {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex items-center gap-3 mb-4">
-                <Users className="h-8 w-8 text-primary" />
-                <h1 className="text-3xl font-bold">
+                <Users className="h-8 w-8 text-white drop-shadow-lg" />
+                <h1 className="text-3xl font-bold text-white drop-shadow-lg">
                     {type === 'individual' ? 'Participantes Individuales' : 'Participantes para Parejas'}
                 </h1>
             </div>
             <Breadcrumb className='mb-6'>
-                <BreadcrumbList>
+                <BreadcrumbList className="text-white/90">
                     <BreadcrumbItem>
-                        <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                        <BreadcrumbLink href="/" className="text-white/90 hover:text-white">Home</BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator />
+                    <BreadcrumbSeparator className="text-white/70" />
                     <BreadcrumbItem>
-                        <BreadcrumbPage>Torneo</BreadcrumbPage>
+                        <BreadcrumbPage className="text-white">Participantes</BreadcrumbPage>
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>

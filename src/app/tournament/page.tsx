@@ -174,17 +174,17 @@ export default function Tournament() {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex items-center gap-3 mb-4">
-                <Trophy className="h-8 w-8 text-yellow-500" />
-                <h1 className="text-3xl font-bold">Sorteo del Torneo</h1>
+                <Trophy className="h-8 w-8 text-yellow-400 drop-shadow-lg" />
+                <h1 className="text-3xl font-bold text-white drop-shadow-lg">Sorteo del Torneo</h1>
             </div>
             <Breadcrumb className='mb-6'>
-                <BreadcrumbList>
+                <BreadcrumbList className="text-white/90">
                     <BreadcrumbItem>
-                        <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                        <BreadcrumbLink href="/" className="text-white/90 hover:text-white">Home</BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator />
+                    <BreadcrumbSeparator className="text-white/70" />
                     <BreadcrumbItem>
-                        <BreadcrumbPage>Torneo</BreadcrumbPage>
+                        <BreadcrumbPage className="text-white">Torneo</BreadcrumbPage>
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
