@@ -72,9 +72,20 @@ export default function Results() {
 
     const calculateWinners = (updatedMatches: Match[]) => {
         return updatedMatches.map((match) => {
-            if (match.player2 === "BYE" || (match.team2 && match.team2.player1 === "BYE")) {
-                return tournamentType === "pairs" ? match.team1 : match.player1;
+            // Verificar BYE para torneos individuales
+            if (match.player2 === "BYE") {
+                return match.player1;
             }
+            
+            // Verificar BYE para torneos de parejas
+            if (tournamentType === "pairs") {
+                // Si team2 es undefined o tiene un jugador BYE, team1 avanza automáticamente
+                if (!match.team2 || match.team2.player1 === "BYE") {
+                    return match.team1;
+                }
+            }
+            
+            // Calcular ganador por puntaje
             if (match.score1 !== undefined && match.score2 !== undefined) {
                 if (match.score1 > match.score2) {
                     return tournamentType === "pairs" ? match.team1 : match.player1;
@@ -140,6 +151,10 @@ export default function Results() {
             if (match.score1 !== undefined && match.score2 !== undefined) {
                 if (tournamentType === "pairs" ) {
                     // Si es un torneo por parejas
+                    // Ignorar partidos BYE en las estadísticas
+                    if (!match.team2 || match.team2.player1 === "BYE") {
+                        return;
+                    }
                     
                     const team1Stats = stats[match.team1!.player1+" y "+match.team1!.player2] || { wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, club: match.team1!.club }
                     const team2Stats = stats[match.team2!.player1+" y "+match.team2!.player2] || { wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, club: match.team2!.club }
@@ -164,6 +179,11 @@ export default function Results() {
 
                 } else {
                     // Si es un torneo individual
+                    // Ignorar partidos BYE en las estadísticas
+                    if (match.player2 === "BYE") {
+                        return;
+                    }
+                    
                     const player1Stats = stats[match.player1!] || { wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 }
                     const player2Stats = stats[match.player2!] || { wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 }
 
@@ -188,11 +208,9 @@ export default function Results() {
 
         // Save updated stats
         localStorage.setItem('stats', JSON.stringify(stats))
-        if (nextRoundMatches.length < 0) {
-            return
-        } else {
-            window.location.reload();
-        }
+        
+        // Recargar la página para mostrar la siguiente ronda
+        window.location.reload();
 
     }
 
@@ -273,7 +291,7 @@ export default function Results() {
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    {tournamentType === "pairs" && match.team1 && match.team2 ? (
+                                    {tournamentType === "pairs" && match.team1 ? (
                                         <>
                                             <div className="p-3 rounded-lg border bg-accent/30">
                                                 <div className="flex items-center justify-between mb-2">
@@ -290,10 +308,10 @@ export default function Results() {
                                                     <Input
                                                         type="number"
                                                         min="0"
-                                                        value={match.team1.player1 === "BYE" || match.team1.player2 === "BYE" ? '' : match.score1 || ''}
+                                                        value={!match.team2 || match.team2.player1 === "BYE" ? '' : match.score1 || ''}
                                                         onChange={(e) => updateScore(index, 1, parseInt(e.target.value) || 0)}
                                                         className="w-16 text-center text-lg font-bold"
-                                                        disabled={match.team1.player1 === "BYE" || match.team2.player1 === "BYE"}
+                                                        disabled={!match.team2 || match.team2.player1 === "BYE"}
                                                     />
                                                 </div>
                                             </div>
@@ -301,22 +319,30 @@ export default function Results() {
                                             <div className="p-3 rounded-lg border bg-accent/30">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <div className="flex-1">
-                                                        <div className="flex items-center gap-1 text-sm font-medium mb-1">
-                                                            <span>{(match.team2 as IPair).player1}</span>
-                                                            <span className="text-muted-foreground">+</span>
-                                                            <span>{(match.team2 as IPair).player2}</span>
-                                                        </div>
-                                                        <Badge variant="secondary" className="text-xs">
-                                                            {(match.team2 as IPair).club}
-                                                        </Badge>
+                                                        {match.team2 ? (
+                                                            <>
+                                                                <div className="flex items-center gap-1 text-sm font-medium mb-1">
+                                                                    <span>{(match.team2 as IPair).player1}</span>
+                                                                    <span className="text-muted-foreground">+</span>
+                                                                    <span>{(match.team2 as IPair).player2}</span>
+                                                                </div>
+                                                                <Badge variant="secondary" className="text-xs">
+                                                                    {(match.team2 as IPair).club}
+                                                                </Badge>
+                                                            </>
+                                                        ) : (
+                                                            <div className="flex items-center gap-1 text-sm font-medium mb-1">
+                                                                <Badge variant="outline" className="text-xs">BYE</Badge>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <Input
                                                         type="number"
                                                         min="0"
-                                                        value={match.team1.player1 === "BYE" || match.team2.player1 === "BYE" ? '' : match.score2 || ''}
+                                                        value={!match.team2 || match.team2.player1 === "BYE" ? '' : match.score2 || ''}
                                                         onChange={(e) => updateScore(index, 2, parseInt(e.target.value) || 0)}
                                                         className="w-16 text-center text-lg font-bold"
-                                                        disabled={match.team1.player1 === "BYE" || match.team2.player1 === "BYE"}
+                                                        disabled={!match.team2 || match.team2.player1 === "BYE"}
                                                     />
                                                 </div>
                                             </div>

@@ -21,7 +21,7 @@ type Match = {
     player1?: string
     player2?: string
     team1?: IPair
-    team2?: IPair | string
+    team2?: IPair
     score1?: number
     score2?: number
     round: string
@@ -128,7 +128,7 @@ export default function Tournament() {
                 } else {
                     newMatches.push({
                         team1: shuffledPairs[i],
-                        team2: 'BYE',
+                        team2: undefined,
                         round: phase,
                     })
                 }
@@ -299,14 +299,22 @@ export default function Tournament() {
                                     </div>
                                     <p className="text-center text-muted-foreground font-bold">VS</p>
                                     <div className="p-3 rounded-lg bg-accent/50">
-                                        <div className="flex items-center gap-2 justify-center mb-1">
-                                            <span className="font-semibold">{(match.team2 as IPair).player1}</span>
-                                            <span className="text-muted-foreground">+</span>
-                                            <span className="font-semibold">{(match.team2 as IPair).player2}</span>
-                                        </div>
-                                        <Badge variant="secondary" className="w-full justify-center">
-                                            {(match.team2 as IPair).club}
-                                        </Badge>
+                                        {match.team2 ? (
+                                            <>
+                                                <div className="flex items-center gap-2 justify-center mb-1">
+                                                    <span className="font-semibold">{(match.team2 as IPair).player1}</span>
+                                                    <span className="text-muted-foreground">+</span>
+                                                    <span className="font-semibold">{(match.team2 as IPair).player2}</span>
+                                                </div>
+                                                <Badge variant="secondary" className="w-full justify-center">
+                                                    {(match.team2 as IPair).club}
+                                                </Badge>
+                                            </>
+                                        ) : (
+                                            <div className="flex items-center justify-center">
+                                                <Badge variant="outline" className="text-base">BYE</Badge>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
